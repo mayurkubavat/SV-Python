@@ -13,7 +13,7 @@ class apb_base_test extends uvm_test;
   apb_env apb_env_h;
 
   apb_seqr m_requester_seqr_h;
-  apb_seqr m_slave_seqr_h;
+  apb_seqr m_completer_seqr_h;
 
   reset_seqr reset_seqr_h;
 
@@ -40,7 +40,7 @@ class apb_base_test extends uvm_test;
 
   function void connect_phase(uvm_phase phase);
     m_requester_seqr_h = apb_env_h.m_requester_seqr_h;
-    m_slave_seqr_h  = apb_env_h.m_slave_seqr_h;
+    m_completer_seqr_h  = apb_env_h.m_completer_seqr_h;
     reset_seqr_h    = apb_env_h.reset_seqr_h;
   endfunction
 

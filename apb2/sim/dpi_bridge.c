@@ -1,108 +1,50 @@
-#include <Python.h>
-#include <stdio.h>
+#include "dpi_bridge/core/dpi_core.h"
+#include "dpi_bridge/core/dpi_registry.h"
+#include "dpi_bridge/plugins/apb/apb_plugin.h"
 #include "svdpi.h"
 
-// Global Python objects
-PyObject *pModule, *pFuncGet, *pFuncSend;
+// Global registry
+static dpi_registry_t *g_registry = NULL;
 
-// Initialize Python and import the driver module
+// Initialize DPI bridge and all plugins
 int dpi_init_python() {
-    Py_Initialize();
-    
-    // Add current directory to sys.path
-    PyRun_SimpleString("import sys");
-    PyRun_SimpleString("sys.path.append('.')");
-    PyRun_SimpleString("sys.path.append('./sim')"); // In case running from root
-
-    pModule = PyImport_ImportModule("apb_driver");
-    if (pModule == NULL) {
-        PyErr_Print();
-        fprintf(stderr, "Failed to load apb_driver module\n");
+    // Initialize Python interpreter
+    if (dpi_core_init_python() != DPI_SUCCESS) {
         return 1;
     }
 
-    pFuncGet = PyObject_GetAttrString(pModule, "get_transaction");
-    if (!pFuncGet || !PyCallable_Check(pFuncGet)) {
-        if (PyErr_Occurred()) PyErr_Print();
-        fprintf(stderr, "Cannot find function get_transaction\n");
+    // Create plugin registry
+    g_registry = dpi_registry_create();
+    if (g_registry == NULL) {
+        dpi_core_finalize_python();
         return 1;
     }
 
-    pFuncSend = PyObject_GetAttrString(pModule, "send_read_data");
-    if (!pFuncSend || !PyCallable_Check(pFuncSend)) {
-        if (PyErr_Occurred()) PyErr_Print();
-        fprintf(stderr, "Cannot find function send_read_data\n");
+    // Initialize APB plugin
+    if (apb_init() != DPI_SUCCESS) {
+        dpi_registry_destroy(g_registry);
+        dpi_core_finalize_python();
         return 1;
     }
 
-    printf("[C-Bridge] Python initialized and module loaded.\n");
+    DPI_LOG_INFO("DPI Bridge initialized successfully");
     return 0;
 }
 
-// Clean up Python
+// Finalize DPI bridge and cleanup all plugins
 void dpi_finalize_python() {
-    Py_XDECREF(pFuncGet);
-    Py_XDECREF(pFuncSend);
-    Py_XDECREF(pModule);
-    Py_Finalize();
-    printf("[C-Bridge] Python finalized.\n");
-}
+    // Cleanup APB plugin
+    apb_cleanup();
 
-// Get transaction from Python
-// Returns: 1 if valid transaction, 0 if no more transactions
-// Outputs: is_write, addr, data
-int dpi_get_transaction(long long time, int *is_write, int *addr, int *data) {
-    PyObject *pValue, *pArgs;
-
-    if (!pFuncGet) return 0;
-
-    pArgs = PyTuple_New(1);
-    PyTuple_SetItem(pArgs, 0, PyLong_FromLongLong(time));
-
-    pValue = PyObject_CallObject(pFuncGet, pArgs);
-    Py_DECREF(pArgs);
-
-    if (pValue != NULL) {
-        if (pValue == Py_None) {
-            Py_DECREF(pValue);
-            return 0; // No more transactions
-        }
-
-        // Expected tuple: (is_write, addr, data)
-        if (!PyTuple_Check(pValue) || PyTuple_Size(pValue) != 3) {
-            fprintf(stderr, "Returned value is not a tuple of size 3\n");
-            Py_DECREF(pValue);
-            return 0;
-        }
-
-        *is_write = (int)PyLong_AsLong(PyTuple_GetItem(pValue, 0));
-        *addr = (int)PyLong_AsLong(PyTuple_GetItem(pValue, 1));
-        *data = (int)PyLong_AsLong(PyTuple_GetItem(pValue, 2));
-
-        Py_DECREF(pValue);
-        return 1;
-    } else {
-        PyErr_Print();
-        return 0;
+    // Cleanup registry
+    if (g_registry != NULL) {
+        dpi_registry_cleanup_all(g_registry);
+        dpi_registry_destroy(g_registry);
+        g_registry = NULL;
     }
-}
 
-// Send read data back to Python
-void dpi_send_read_data(long long time, int data) {
-    PyObject *pArgs, *pValue;
-
-    if (!pFuncSend) return;
-
-    pArgs = PyTuple_New(2);
-    PyTuple_SetItem(pArgs, 0, PyLong_FromLongLong(time));
-    PyTuple_SetItem(pArgs, 1, PyLong_FromLong(data));
-
-    pValue = PyObject_CallObject(pFuncSend, pArgs);
-    Py_DECREF(pArgs);
-
-    if (pValue != NULL) {
-        Py_DECREF(pValue);
-    } else {
-        PyErr_Print();
-    }
+    // Finalize Python
+    dpi_core_finalize_python();
+    
+    DPI_LOG_INFO("DPI Bridge finalized");
 }

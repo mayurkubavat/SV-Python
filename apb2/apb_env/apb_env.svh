@@ -3,9 +3,9 @@ class apb_env extends uvm_env;
 
   apb_env_config m_env_cfg;
 
-  // Configuration for ABP Bridge and Slave
+  // Configuration for ABP Requester and Completer
   apb_requester_config m_requester_cfg;
-  apb_completer_config m_slave_cfg;
+  apb_completer_config m_completer_cfg;
 
   // APB Subscriber to generate coverage
   apb_subscriber apb_subscriber_h;
@@ -15,7 +15,7 @@ class apb_env extends uvm_env;
   reset_agent   reset_agent_h;
 
   apb_seqr   m_requester_seqr_h;
-  apb_seqr   m_slave_seqr_h;
+  apb_seqr   m_completer_seqr_h;
   reset_seqr reset_seqr_h;
 
   function new(string name, uvm_component parent);
@@ -36,11 +36,11 @@ class apb_env extends uvm_env;
     m_requester_cfg.is_active = m_env_cfg.requester_is_active;
     uvm_config_db#(apb_requester_config)::set(this, "apb_requester*", "apb_requester_config", m_requester_cfg);
 
-    // Set slave agent(APB Slave) configuration
-    m_slave_cfg           = apb_completer_config::type_id::create("m_slave_cfg");
-    m_slave_cfg.apb_intf  = m_env_cfg.apb_intf;
-    m_slave_cfg.is_active = m_env_cfg.slave_is_active;
-    uvm_config_db#(apb_completer_config)::set(this, "apb_completer*", "apb_completer_config", m_slave_cfg);
+    // Set completer agent(APB Completer) configuration
+    m_completer_cfg           = apb_completer_config::type_id::create("m_completer_cfg");
+    m_completer_cfg.apb_intf  = m_env_cfg.apb_intf;
+    m_completer_cfg.is_active = m_env_cfg.completer_is_active;
+    uvm_config_db#(apb_completer_config)::set(this, "apb_completer*", "apb_completer_config", m_completer_cfg);
 
     apb_requester_h = apb_requester::type_id::create("apb_requester_h", this);
     apb_completer_h = apb_completer::type_id::create("apb_completer_h", this);
@@ -49,7 +49,7 @@ class apb_env extends uvm_env;
 
   function void connect_phase(uvm_phase phase);
     m_requester_seqr_h = apb_requester_h.m_requester_seqr_h;
-    m_slave_seqr_h  = apb_completer_h.m_slave_seqr_h;
+    m_completer_seqr_h  = apb_completer_h.m_completer_seqr_h;
     reset_seqr_h    = reset_agent_h.reset_seqr_h;
   endfunction
 

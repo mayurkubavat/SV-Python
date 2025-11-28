@@ -5,21 +5,21 @@ class apb_completer_driver extends uvm_driver#(apb_xtn);
 
   virtual apb_if apb_intf;
 
-  apb_completer_config slave_cfg_h;
+  apb_completer_config completer_cfg_h;
 
   function new(string name, uvm_component parent);
     super.new(name, parent);
   endfunction
 
   function void build_phase(uvm_phase phase);
-    if(!uvm_config_db#(apb_completer_config)::get(this, "", "apb_completer_config", slave_cfg_h)) begin
+    if(!uvm_config_db#(apb_completer_config)::get(this, "", "apb_completer_config", completer_cfg_h)) begin
       `uvm_fatal(get_full_name(), "Cannot get VIF from configuration database!")
     end
     super.build_phase(phase);
   endfunction
 
   function void connect_phase(uvm_phase phase);
-    apb_intf = slave_cfg_h.apb_intf;
+    apb_intf = completer_cfg_h.apb_intf;
     super.connect_phase(phase);
   endfunction
 

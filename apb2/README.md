@@ -14,18 +14,25 @@ This testbench demonstrates a complete SV-C-Python integration using DPI-C (Dire
 
 ```
 apb2/
-├── apb_completer/       # APB slave (completer) agent
+├── apb_completer/       # APB completer (slave) agent
 ├── apb_env/             # UVM environment and transaction definitions
-├── apb_requester/       # APB master (requester) agent
+├── apb_requester/       # APB requester (master) agent
 │   └── apb_python_seq.sv    # Python-driven sequence using DPI-C
 ├── apb_test/            # UVM test cases
 │   └── apb_init_test.svh    # Test using Python sequence
 ├── reset_agent/         # Reset agent
 ├── sim/                 # Simulation files
-│   ├── apb_driver.py        # Python transaction driver
-│   ├── dpi_bridge.c         # C bridge for SV-Python communication
+│   ├── dpi_bridge/          # Modular DPI bridge
+│   │   ├── core/            # Core Python management
+│   │   └── plugins/apb/     # APB protocol plugin
+│   ├── tests/               # Python test files
+│   │   ├── apb_base.py      # Base classes and utilities
+│   │   ├── apb_driver.py    # DPI interface
+│   │   ├── apb_basic_test.py   # Basic test
+│   │   ├── apb_burst_test.py   # Burst test
+│   │   └── apb_random_test.py  # Random test
 │   ├── apb_inc_xilinx.f     # Xilinx file list
-│   └── svdpi.h              # DPI header (mock for compilation)
+│   └── sim.py               # Simulation script
 ├── top/                 # Top-level testbench
 └── README.md
 ```
@@ -34,20 +41,24 @@ apb2/
 
 ### DPI Bridge Components
 
-1. **Python Driver (`sim/apb_driver.py`)**
-   - Defines transaction list (address/data pairs)
-   - `get_transaction()`: Returns next transaction to C bridge
-   - `send_read_data(data)`: Receives read data from simulation
+**Modular Architecture:**
 
-2. **C Bridge (`sim/dpi_bridge.c`)**
-   - Embeds Python interpreter
-   - Exports DPI-C functions to SystemVerilog:
-     - `dpi_init_python()`: Initialize Python interpreter
-     - `dpi_get_transaction()`: Fetch transaction from Python
-     - `dpi_send_read_data()`: Send read data to Python
-     - `dpi_finalize_python()`: Clean up Python
+1. **Core Layer (`sim/dpi_bridge/core/`)**
+   - Python interpreter lifecycle management
+   - Module loading and function retrieval
+   - Plugin registry system
 
-3. **SystemVerilog Sequence (`apb_requester/apb_python_seq.sv`)**
+2. **APB Plugin (`sim/dpi_bridge/plugins/apb/`)**
+   - APB-specific DPI-C functions
+   - Loads Python driver from `tests/`
+   - Exports `dpi_get_transaction()` and `dpi_send_read_data()`
+
+3. **Python Test Infrastructure (`sim/tests/`)**
+   - `apb_base.py`: Base classes (`APBTransaction`, `APBSequence`)
+   - `apb_driver.py`: DPI interface, loads test modules
+   - `apb_*_test.py`: Test-specific stimulus
+
+4. **SystemVerilog Sequence (`apb_requester/apb_python_seq.sv`)**
    - Imports DPI-C functions
    - Fetches transactions from Python via C bridge
    - Drives APB bus with Python-provided data
@@ -62,13 +73,18 @@ apb2/
 
 ## Building the DPI Bridge
 
-The DPI bridge must be compiled before running simulations:
+The modular DPI bridge compiles all source files together:
 
 ```bash
 cd sim
-gcc -shared -fPIC -o libdpi_bridge.so dpi_bridge.c \
+gcc -shared -fPIC -o libdpi_bridge.so \
+    dpi_bridge.c \
+    dpi_bridge/core/dpi_core.c \
+    dpi_bridge/core/dpi_registry.c \
+    dpi_bridge/plugins/apb/apb_plugin.c \
     $(python3-config --cflags --ldflags) \
-    -I/tools/Xilinx/2025.1/Vivado/data/xsim/include
+    -I/tools/Xilinx/2025.1/Vivado/data/xsim/include \
+    -I.
 
 # Create symlink for Xilinx xelab
 ln -sf libdpi_bridge.so dpi_bridge.so
@@ -95,6 +111,26 @@ sim.py --top top \
 - `--uvm`: Enable UVM library
 - `--test apb_init_test`: UVM test name
 - `--sv_lib dpi_bridge`: DPI shared library (without lib prefix or .so extension)
+
+### Selecting Python Tests
+
+Use the `APB_TEST` environment variable to select which Python test to run:
+
+```bash
+# Run basic test (default)
+APB_TEST=apb_basic_test sim.py --top top --filelist apb_inc_xilinx.f --uvm --test apb_init_test --sv_lib dpi_bridge
+
+# Run burst test
+APB_TEST=apb_burst_test sim.py --top top --filelist apb_inc_xilinx.f --uvm --test apb_init_test --sv_lib dpi_bridge
+
+# Run random test
+APB_TEST=apb_random_test sim.py --top top --filelist apb_inc_xilinx.f --uvm --test apb_init_test --sv_lib dpi_bridge
+```
+
+**Available Tests:**
+- `apb_basic_test`: 6 transactions (2 writes, 2 reads, 1 write, 1 read)
+- `apb_burst_test`: 16 transactions (8 consecutive writes + 8 reads)
+- `apb_random_test`: 20 random read/write transactions
 
 ### Cleaning Build Artifacts
 
