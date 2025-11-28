@@ -3,7 +3,7 @@ class apb_env_config extends uvm_object;
 
   virtual apb_if apb_intf;
 
-  uvm_active_passive_enum bridge_is_active = UVM_ACTIVE;
+  uvm_active_passive_enum requester_is_active = UVM_ACTIVE;
   uvm_active_passive_enum slave_is_active  = UVM_ACTIVE;
 
   bit has_coverage;

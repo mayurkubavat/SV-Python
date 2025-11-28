@@ -1,3 +1,5 @@
+`include "../apb_env/apb_logging.svh"
+
 // Module: Reset Driver
 // Filename: reset_driver.svh
 
@@ -37,7 +39,7 @@ task reset_driver::reset();
     if(req.reset_assert) begin
       #10ns;
     end
-    `uvm_info("RESET/DRV", "Driving RESET..", UVM_MEDIUM)
+    `logging(evReset_Assertion, UVM_MEDIUM, "")
     vif.PRESETn <= 1'b0;
 
     repeat(req.reset_width) @(vif.mdrv_cb);
@@ -46,4 +48,3 @@ task reset_driver::reset();
     @(vif.mdrv_cb);
   end
 endtask
-

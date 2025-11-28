@@ -51,12 +51,16 @@ void dpi_finalize_python() {
 // Get transaction from Python
 // Returns: 1 if valid transaction, 0 if no more transactions
 // Outputs: is_write, addr, data
-int dpi_get_transaction(int *is_write, int *addr, int *data) {
-    PyObject *pValue;
+int dpi_get_transaction(long long time, int *is_write, int *addr, int *data) {
+    PyObject *pValue, *pArgs;
 
     if (!pFuncGet) return 0;
 
-    pValue = PyObject_CallObject(pFuncGet, NULL);
+    pArgs = PyTuple_New(1);
+    PyTuple_SetItem(pArgs, 0, PyLong_FromLongLong(time));
+
+    pValue = PyObject_CallObject(pFuncGet, pArgs);
+    Py_DECREF(pArgs);
 
     if (pValue != NULL) {
         if (pValue == Py_None) {
@@ -84,13 +88,14 @@ int dpi_get_transaction(int *is_write, int *addr, int *data) {
 }
 
 // Send read data back to Python
-void dpi_send_read_data(int data) {
+void dpi_send_read_data(long long time, int data) {
     PyObject *pArgs, *pValue;
 
     if (!pFuncSend) return;
 
-    pArgs = PyTuple_New(1);
-    PyTuple_SetItem(pArgs, 0, PyLong_FromLong(data));
+    pArgs = PyTuple_New(2);
+    PyTuple_SetItem(pArgs, 0, PyLong_FromLongLong(time));
+    PyTuple_SetItem(pArgs, 1, PyLong_FromLong(data));
 
     pValue = PyObject_CallObject(pFuncSend, pArgs);
     Py_DECREF(pArgs);

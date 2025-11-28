@@ -1,3 +1,5 @@
+`include "../apb_env/apb_logging.svh"
+
 class apb_completer_driver extends uvm_driver#(apb_xtn);
   `uvm_component_utils(apb_completer_driver)
 
@@ -11,7 +13,7 @@ class apb_completer_driver extends uvm_driver#(apb_xtn);
 
   function void build_phase(uvm_phase phase);
     if(!uvm_config_db#(apb_completer_config)::get(this, "", "apb_completer_config", slave_cfg_h)) begin
-      `uvm_fatal("APB/SLAVE/DRV", "Cannot get VIF from configuration database!")
+      `uvm_fatal(get_full_name(), "Cannot get VIF from configuration database!")
     end
     super.build_phase(phase);
   endfunction
@@ -28,14 +30,14 @@ class apb_completer_driver extends uvm_driver#(apb_xtn);
       // Detect RESET signals, Disable Driver on detection
       forever begin
         wait(!apb_intf.PRESETn);
-        `uvm_info("APB/SLAVE/DRV", "RESET assertion detected..", UVM_MEDIUM)
+        `logging(evReset_Assertion, UVM_MEDIUM, "")
         disable driver;
         apb_intf.PREADY  <= 0;
         apb_intf.PSLVERR <= 0;
         apb_intf.PRDATA  <= 0;
 
         wait(apb_intf.PRESETn);
-        `uvm_info("APB/SLAVE/DRV", "RESET deassertion detected..", UVM_MEDIUM)
+        `logging(evReset_Deassertion, UVM_MEDIUM, "")
       end
 
       forever begin: driver
@@ -55,7 +57,7 @@ task apb_completer_driver::drive();
   apb_intf.sdrv_cb.PREADY <= 1;
 
   if(!apb_intf.sdrv_cb.PWRITE) begin
-    `uvm_info("APB/SLAVE/DRV", "Read request received..", UVM_MEDIUM)
+    `logging(evApb_ReadRequest, UVM_MEDIUM, $sformatf("addr=%0h", apb_intf.sdrv_cb.PADDR))
     // Read Operation
     apb_intf.sdrv_cb.PRDATA <= $random;
   end

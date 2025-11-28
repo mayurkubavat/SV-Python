@@ -3,8 +3,8 @@
 
 import "DPI-C" context function int dpi_init_python();
 import "DPI-C" context function void dpi_finalize_python();
-import "DPI-C" context function int dpi_get_transaction(output int is_write, output int addr, output int data);
-import "DPI-C" context function void dpi_send_read_data(input int data);
+import "DPI-C" context function int dpi_get_transaction(input longint time_ps, output int is_write, output int addr, output int data);
+import "DPI-C" context function void dpi_send_read_data(input longint time_ps, input int data);
 
 class apb_python_seq extends apb_base_seq;
   `uvm_object_utils(apb_python_seq)
@@ -30,7 +30,7 @@ task apb_python_seq::body();
   end
 
   forever begin
-    valid = dpi_get_transaction(is_write, addr, data);
+    valid = dpi_get_transaction($time, is_write, addr, data);
     if (valid == 0) break;
 
     req = apb_xtn::type_id::create("req");
@@ -54,7 +54,7 @@ task apb_python_seq::body();
     finish_item(req);
 
     if (!is_write) begin
-      dpi_send_read_data(req.apb_rd_data);
+      dpi_send_read_data($time, req.apb_rd_data);
     end
   end
 

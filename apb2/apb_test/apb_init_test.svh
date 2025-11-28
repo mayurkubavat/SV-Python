@@ -24,7 +24,7 @@ class apb_init_test extends apb_base_test;
 
     repeat(1) begin
       reset_seq_h.start(reset_seqr_h);
-      apb_python_seq_h.start(m_bridge_seqr_h);
+      apb_python_seq_h.start(m_requester_seqr_h);
     end
     #100;
 
