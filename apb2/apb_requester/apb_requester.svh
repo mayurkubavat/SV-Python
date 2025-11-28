@@ -2,7 +2,7 @@ class apb_requester extends uvm_agent;
   `uvm_component_utils(apb_requester)
 
   apb_requester_driver  m_requester_driver_h;
-  apb_requester_monitor m_requester_monitor_h;
+  apb_monitor           m_requester_monitor_h;
   apb_seqr              m_requester_seqr_h;
 
   uvm_analysis_port#(apb_xtn) agent_ap;
@@ -29,7 +29,8 @@ class apb_requester extends uvm_agent;
       m_requester_seqr_h   = apb_seqr::type_id::create("m_requester_seqr_h", this);
     end
 
-    m_requester_monitor_h = apb_requester_monitor::type_id::create("m_requester_monitor_h", this);
+    m_requester_monitor_h = apb_monitor::type_id::create("m_requester_monitor_h", this);
+    m_requester_monitor_h.apb_intf = requester_cfg.apb_intf;
   endfunction
 
   function void connect_phase(uvm_phase phase);

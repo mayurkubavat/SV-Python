@@ -1,5 +1,3 @@
-`include "../apb_env/apb_logging.svh"
-
 // Module: Reset Driver
 // Filename: reset_driver.svh
 

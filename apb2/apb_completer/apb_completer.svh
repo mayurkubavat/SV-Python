@@ -2,7 +2,7 @@ class apb_completer extends uvm_agent;
   `uvm_component_utils(apb_completer)
 
   apb_completer_driver  m_completer_driver_h;
-  apb_completer_monitor m_completer_monitor_h;
+  apb_monitor           m_completer_monitor_h;
   apb_seqr              m_completer_seqr_h;
 
   uvm_analysis_port#(apb_xtn) agent_ap;
@@ -29,7 +29,8 @@ class apb_completer extends uvm_agent;
       m_completer_seqr_h   = apb_seqr::type_id::create("m_completer_seqr_h", this);
     end
 
-    m_completer_monitor_h = apb_completer_monitor::type_id::create("m_completer_monitor_h", this);
+    m_completer_monitor_h = apb_monitor::type_id::create("m_completer_monitor_h", this);
+    m_completer_monitor_h.apb_intf = completer_cfg.apb_intf;
   endfunction
 
   function void connect_phase(uvm_phase phase);

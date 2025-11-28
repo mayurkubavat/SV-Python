@@ -1,5 +1,3 @@
-`include "../apb_env/apb_logging.svh"
-
 class apb_requester_driver extends uvm_driver#(apb_xtn);
   `uvm_component_utils(apb_requester_driver)
 
