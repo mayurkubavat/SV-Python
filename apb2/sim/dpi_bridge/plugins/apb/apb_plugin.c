@@ -1,3 +1,30 @@
+/*
+ * APB Plugin - The "Custom Hardware" Approach
+ * 
+ * FOR SYSTEMVERILOG ENGINEERS:
+ * ---------------------------
+ * This is an example of a "Protocol Specific" plugin.
+ * Unlike the Generic plugin, this one is hardcoded for APB.
+ * 
+ * How it works:
+ * 1. `dpi_get_transaction(...)`:
+ *    - SV calls this to ask "What should I do next?".
+ *    - C calls Python `get_transaction()`.
+ *    - Python returns a tuple: `(is_write, addr, data)`.
+ *    - C unpacks this tuple and puts values into the `int*` output arguments.
+ * 
+ * 2. `dpi_send_read_data(...)`:
+ *    - SV calls this after a read completes.
+ *    - C packs the data into a Python integer and calls `send_read_data()`.
+ * 
+ * When to use this style?
+ * - High Performance: Passing raw integers is faster than parsing strings.
+ * - Complex C Logic: If you need to do heavy computation in C before Python sees it.
+ * - Legacy Code: If you are integrating with existing C models.
+ * 
+ * For most DV tasks, prefer the Generic Plugin.
+ */
+
 #include "apb_plugin.h"
 #include "../plugin_interface.h"
 #include "../../core/dpi_core.h"
@@ -12,7 +39,16 @@ typedef struct {
 
 static apb_plugin_data_t apb_data = {NULL, NULL, NULL};
 
-// Plugin lifecycle
+/**
+ * apb_init()
+ * 
+ * Description:
+ *   Initializes the APB plugin.
+ *   Loads `apb_driver` module and retrieves driver functions.
+ * 
+ * Returns:
+ *   DPI_SUCCESS or DPI_ERROR
+ */
 int apb_init(void) {
     DPI_LOG_INFO("Initializing APB plugin");
     
@@ -38,6 +74,12 @@ int apb_init(void) {
     return DPI_SUCCESS;
 }
 
+/**
+ * apb_cleanup()
+ * 
+ * Description:
+ *   Releases Python references.
+ */
 void apb_cleanup(void) {
     DPI_LOG_INFO("Cleaning up APB plugin");
     
@@ -50,7 +92,20 @@ void apb_cleanup(void) {
     apb_data.module = NULL;
 }
 
-// DPI-C function: Get APB transaction from Python
+/**
+ * dpi_get_transaction()
+ * 
+ * Description:
+ *   Called by SV driver to fetch the next transaction.
+ *   Converts Python tuple -> C integers -> SV output arguments.
+ * 
+ * Args:
+ *   time: Current simulation time
+ *   is_write, addr, data: Output pointers for transaction details
+ * 
+ * Returns:
+ *   1 if transaction available, 0 if none.
+ */
 int dpi_get_transaction(dpi_time_t time, int *is_write, int *addr, int *data) {
     PyObject *pArgs, *pValue;
 
@@ -91,7 +146,16 @@ int dpi_get_transaction(dpi_time_t time, int *is_write, int *addr, int *data) {
     return 0;
 }
 
-// DPI-C function: Send read data to Python
+/**
+ * dpi_send_read_data()
+ * 
+ * Description:
+ *   Called by SV driver to return read data to Python.
+ * 
+ * Args:
+ *   time: Current simulation time
+ *   data: Read data value
+ */
 void dpi_send_read_data(dpi_time_t time, int data) {
     PyObject *pArgs, *pValue;
 

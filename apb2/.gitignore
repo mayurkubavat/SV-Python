@@ -1,0 +1,23 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Compiled libraries
+*.so
+*.o
+
+# Build artifacts
+*.log
+xsim.dir/
+.Xil/
+webtalk*.jou
+webtalk*.log
+vivado*.jou
+vivado*.log
+
+# Simulation artifacts
+*.wdb
+*.vcd
+*.pb
+*.jou
