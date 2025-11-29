@@ -22,5 +22,20 @@ module top;
     run_test();
   end
 
+  // APB Protocol Assertions - Bind assertion interface to APB interface
+  bind apb_if apb_assertions_if apb_assert_if (
+    .PCLK     (PCLK),
+    .PRESETn  (PRESETn),
+    .PADDR    (PADDR),
+    .PWDATA   (PWDATA),
+    .PRDATA   (PRDATA),
+    .PPROT    (PPROT),
+    .PSTRB    (PSTRB),
+    .PWRITE   (PWRITE),
+    .PENABLE  (PENABLE),
+    .PREADY   (PREADY),
+    .PSLVERR  (PSLVERR)
+  );
+
 endmodule: top
 

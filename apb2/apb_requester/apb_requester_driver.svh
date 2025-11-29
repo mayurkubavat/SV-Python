@@ -74,14 +74,22 @@ task apb_requester_driver::drive();
   // Access Phase
   apb_intf.mdrv_cb.PENABLE <= 1;
 
-  wait(apb_intf.mdrv_cb.PENABLE && apb_intf.mdrv_cb.PREADY);
+  // Wait for PREADY to be asserted at clock edge (APB protocol compliant)
+  @(apb_intf.mdrv_cb);
+  while (!apb_intf.mdrv_cb.PREADY) begin
+    @(apb_intf.mdrv_cb);
+  end
   
   // Capture read data for read transactions
   if(req.apb_rd_wr == apb_xtn::APB_READ) begin
     req.apb_rd_data = apb_intf.mdrv_cb.PRDATA;
   end
   
+  // Deassert PENABLE (return to IDLE)
   apb_intf.mdrv_cb.PENABLE <= 0;
+
+  // Wait one more cycle before changing other signals
+  @(apb_intf.mdrv_cb);
   apb_intf.mdrv_cb.PWRITE  <= 0; // Default to Read/Idle
   apb_intf.mdrv_cb.PADDR   <= 0;
 
