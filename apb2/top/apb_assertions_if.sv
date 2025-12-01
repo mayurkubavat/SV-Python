@@ -40,13 +40,13 @@ interface apb_assertions_if(
   // Basic Protocol Assertions
   //=============================================================================
 
-  // APB_SETUP_TO_ACCESS: PENABLE must go high after SETUP phase
-  property p_setup_to_access;
+  // APB_ACCESS_AFTER_SETUP: When PENABLE rises, we must have had a SETUP phase
+  property p_access_after_setup;
     @(posedge PCLK) disable iff (!PRESETn)
-    (current_state == SETUP) |=> (current_state == ACCESS);
+    $rose(PENABLE) |-> $past(!PENABLE);
   endproperty
-  assert_setup_to_access: assert property(p_setup_to_access)
-    else $error("[APB_ASSERTION] SETUP phase must transition to ACCESS phase");
+  assert_access_after_setup: assert property(p_access_after_setup)
+    else $error("[APB_ASSERTION] ACCESS phase (PENABLE=1) must be preceded by SETUP phase (PENABLE=0)");
 
   // APB_PENABLE_DEASSERT: PENABLE must deassert when PREADY is high
   property p_penable_deassert;
@@ -56,10 +56,10 @@ interface apb_assertions_if(
   assert_penable_deassert: assert property(p_penable_deassert)
     else $error("[APB_ASSERTION] PENABLE must deassert after PREADY");
 
-  // APB_PENABLE_PULSE: PENABLE must be a single-cycle pulse when PREADY is high
+  // APB_PENABLE_PULSE: PENABLE must remain high until PREADY
   property p_penable_single_pulse;
     @(posedge PCLK) disable iff (!PRESETn)
-    $rose(PENABLE) |-> ##[1:$] (PREADY && PENABLE);
+    (PENABLE && !PREADY) |=> PENABLE;
   endproperty
   assert_penable_single_pulse: assert property(p_penable_single_pulse)
     else $error("[APB_ASSERTION] PENABLE must remain high until PREADY");

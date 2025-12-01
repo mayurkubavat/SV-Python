@@ -11,62 +11,24 @@ interface apb_if(input PCLK);
   logic        PREADY;
   logic        PSLVERR;
 
-  clocking mdrv_cb @(posedge PCLK);
-    default input #1 output #0;
-    output  PADDR;
-    output  PWDATA;
-    output  PSTRB;
-    output  PPROT;
-    output  PWRITE;
-    inout   PENABLE;
-    input   PREADY;
-    input   PRDATA;
-    input   PSLVERR;
-  endclocking
+  // Modports for direct signal access
+  modport MDRV_MP(
+    input  PCLK, PRESETn, PREADY, PRDATA, PSLVERR,
+    output PADDR, PWDATA, PSTRB, PPROT, PWRITE, PENABLE
+  );
 
-  clocking mmon_cb @(posedge PCLK);
-    default input #1 output #0;
-    input PADDR;
-    input PWDATA;
-    input PSTRB;
-    input PPROT;
-    input PWRITE;
-    input PENABLE;
-    input PREADY;
-    input PRDATA;
-    input PSLVERR;
-  endclocking
+  modport MMON_MP(
+    input PCLK, PRESETn, PADDR, PWDATA, PSTRB, PPROT, PWRITE, PENABLE, PREADY, PRDATA, PSLVERR
+  );
 
-  clocking sdrv_cb @(posedge PCLK);
-    default input #1 output #0;
-    input  PADDR;
-    input  PWDATA;
-    input  PSTRB;
-    input  PPROT;
-    input  PWRITE;
-    input  PENABLE;
-    inout  PREADY;
-    output PRDATA;
-    output PSLVERR;
-  endclocking
+  modport SDRV_MP(
+    input  PCLK, PRESETn, PADDR, PWDATA, PSTRB, PPROT, PWRITE, PENABLE,
+    output PREADY, PRDATA, PSLVERR
+  );
 
-  clocking smon_cb @(posedge PCLK);
-    default input #1 output #0;
-    input PADDR;
-    input PWDATA;
-    input PSTRB;
-    input PPROT;
-    input PWRITE;
-    input PENABLE;
-    input PREADY;
-    input PRDATA;
-    input PSLVERR;
-  endclocking
-
-  modport MDRV_MP(clocking mdrv_cb, input PRESETn);
-  modport MMON_MP(clocking mmon_cb, input PRESETn);
-  modport SDRV_MP(clocking sdrv_cb, input PRESETn);
-  modport SMON_MP(clocking smon_cb, input PRESETn);
+  modport SMON_MP(
+    input PCLK, PRESETn, PADDR, PWDATA, PSTRB, PPROT, PWRITE, PENABLE, PREADY, PRDATA, PSLVERR
+  );
 
 endinterface: apb_if
 

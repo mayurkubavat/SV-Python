@@ -40,9 +40,9 @@ task reset_driver::reset();
     `logging(evReset_Assertion, UVM_MEDIUM, "")
     vif.PRESETn <= 1'b0;
 
-    repeat(req.reset_width) @(vif.mdrv_cb);
+    repeat(req.reset_width) @(posedge vif.PCLK);
 
     vif.PRESETn <= 1'b1;
-    @(vif.mdrv_cb);
+    @(posedge vif.PCLK);
   end
 endtask

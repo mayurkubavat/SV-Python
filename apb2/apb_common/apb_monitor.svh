@@ -23,25 +23,25 @@ class apb_monitor extends uvm_monitor;
     
     forever begin
       // Wait for valid APB transaction (PENABLE && PREADY)
-      @(apb_intf.mmon_cb);
+      @(posedge apb_intf.PCLK);
       
-      if (apb_intf.mmon_cb.PENABLE && apb_intf.mmon_cb.PREADY) begin
+      if (apb_intf.PENABLE && apb_intf.PREADY) begin
         txn = apb_xtn::type_id::create("txn");
         
         // Capture transaction details
-        txn.apb_address = apb_intf.mmon_cb.PADDR;
-        txn.apb_strobe  = apb_intf.mmon_cb.PSTRB;
+        txn.apb_address = apb_intf.PADDR;
+        txn.apb_strobe  = apb_intf.PSTRB;
         
-        if (apb_intf.mmon_cb.PWRITE) begin
+        if (apb_intf.PWRITE) begin
           // Write transaction
           txn.apb_rd_wr   = apb_xtn::APB_WRITE;
-          txn.apb_wr_data = apb_intf.mmon_cb.PWDATA;
+          txn.apb_wr_data = apb_intf.PWDATA;
           `logging(evApb_Transaction, UVM_HIGH, 
                    $sformatf("WRITE addr=0x%0h data=0x%0h", txn.apb_address, txn.apb_wr_data))
         end else begin
           // Read transaction
           txn.apb_rd_wr   = apb_xtn::APB_READ;
-          txn.apb_rd_data = apb_intf.mmon_cb.PRDATA;
+          txn.apb_rd_data = apb_intf.PRDATA;
           `logging(evApb_Transaction, UVM_HIGH, 
                    $sformatf("READ addr=0x%0h data=0x%0h", txn.apb_address, txn.apb_rd_data))
         end

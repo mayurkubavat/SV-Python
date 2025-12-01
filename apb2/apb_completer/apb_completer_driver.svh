@@ -49,18 +49,18 @@ endclass
 
 task apb_completer_driver::drive();
   do
-    repeat({$random} % 10) @(apb_intf.sdrv_cb);
-  while(!apb_intf.sdrv_cb.PENABLE);
+    repeat({$random} % 10) @(posedge apb_intf.PCLK);
+  while(!apb_intf.PENABLE);
 
-  apb_intf.sdrv_cb.PREADY <= 1;
+  apb_intf.PREADY <= 1;
 
-  if(!apb_intf.sdrv_cb.PWRITE) begin
-    `logging(evApb_ReadRequest, UVM_MEDIUM, $sformatf("addr=%0h", apb_intf.sdrv_cb.PADDR))
+  if(!apb_intf.PWRITE) begin
+    `logging(evApb_ReadRequest, UVM_MEDIUM, $sformatf("addr=%0h", apb_intf.PADDR))
     // Read Operation
-    apb_intf.sdrv_cb.PRDATA <= $random;
+    apb_intf.PRDATA <= $random;
   end
 
-  @(apb_intf.sdrv_cb);
-  apb_intf.sdrv_cb.PREADY <= 0;
+  @(posedge apb_intf.PCLK);
+  apb_intf.PREADY <= 0;
 
 endtask
