@@ -5,6 +5,7 @@ package apb_test_pkg;
   import uvm_pkg::*;
   import apb_common_pkg::*;
   import apb_env_pkg::*;
+  import transaction_pkg::*;
 
     // Import DPI-C functions
     import "DPI-C" context function int dpi_init_python();
@@ -14,5 +15,8 @@ package apb_test_pkg;
   `include "apb_init_test.svh"
   `include "apb_reset_test.svh"
   `include "apb_dpi_object_test.svh"
+  `include "../apb_requester/generic_python_seq.svh"
+  `include "../apb_requester/apb_python_gen_seq.svh"
+  `include "apb_generic_python_test.svh"
 
 endpackage: apb_test_pkg

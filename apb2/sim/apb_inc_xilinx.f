@@ -6,6 +6,7 @@
 -i ../apb_test
 
 dpi_bridge/plugins/generic/generic_pkg.sv
+dpi_bridge/plugins/generic/transaction/transaction_pkg.sv
 ../apb_common/apb_common_pkg.sv
 
 ../apb_env/apb_env_pkg.sv

@@ -24,6 +24,7 @@
 #include "dpi_bridge/core/dpi_registry.h"
 #include "dpi_bridge/plugins/apb/apb_plugin.h"
 #include "dpi_bridge/plugins/generic/generic_plugin.h"
+#include "dpi_bridge/plugins/generic/transaction/transaction_plugin.h"
 #include "svdpi.h"
 
 // Global registry to track all active plugins
@@ -67,6 +68,13 @@ int dpi_init_python() {
         return 1;
     }
 
+    // Initialize Transaction Generation plugin
+    if (transaction_init() != DPI_SUCCESS) {
+        dpi_registry_destroy(g_registry);
+        dpi_core_finalize_python();
+        return 1;
+    }
+
     DPI_LOG_INFO("DPI Bridge initialized successfully");
     return 0;
 }
@@ -82,6 +90,7 @@ void dpi_finalize_python() {
     // Cleanup APB plugin
     apb_cleanup();
     generic_cleanup();
+    transaction_cleanup();
 
     // Cleanup registry
     if (g_registry != NULL) {
